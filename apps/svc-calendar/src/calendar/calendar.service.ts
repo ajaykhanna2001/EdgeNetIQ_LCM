@@ -45,7 +45,11 @@ export class CalendarService {
     // Validate recurrence rule if provided
     if (createEventDto.recurrenceRule) {
       try {
-        RRule.fromString(createEventDto.recurrenceRule);
+        // Just validate the RRULE syntax without requiring DTSTART
+        new RRule({
+          freq: RRule.WEEKLY, // Default frequency for basic validation
+          ...RRule.parseString(createEventDto.recurrenceRule)
+        });
       } catch (error) {
         throw new BadRequestException('Invalid recurrence rule');
       }
@@ -153,7 +157,11 @@ export class CalendarService {
     // Validate recurrence rule if provided
     if (updateEventDto.recurrenceRule) {
       try {
-        RRule.fromString(updateEventDto.recurrenceRule);
+        // Just validate the RRULE syntax without requiring DTSTART
+        new RRule({
+          freq: RRule.WEEKLY, // Default frequency for basic validation
+          ...RRule.parseString(updateEventDto.recurrenceRule)
+        });
       } catch (error) {
         throw new BadRequestException('Invalid recurrence rule');
       }
@@ -388,7 +396,9 @@ export class CalendarService {
     }
 
     try {
-      const rrule = RRule.fromString(event.recurrenceRule);
+      // Parse the RRULE string and add the DTSTART
+      const rruleString = `DTSTART:${event.startDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}\nRRULE:${event.recurrenceRule}`;
+      const rrule = RRule.fromString(rruleString);
       const duration = event.endDate.getTime() - event.startDate.getTime();
       
       const occurrences = rrule.between(startDate, endDate);

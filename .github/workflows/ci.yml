@@ -85,7 +85,8 @@ jobs:
     - name: Build calendar service image
       uses: docker/build-push-action@v5
       with:
-        context: ./apps/svc-calendar
+        context: .
+        file: ./apps/svc-calendar/Dockerfile
         push: false
         tags: edgenetiq/calendar-service:test
         cache-from: type=gha
@@ -94,7 +95,8 @@ jobs:
     - name: Build web app image
       uses: docker/build-push-action@v5
       with:
-        context: ./apps/web
+        context: .
+        file: ./apps/web/Dockerfile
         push: false
         tags: edgenetiq/web:test
         cache-from: type=gha
