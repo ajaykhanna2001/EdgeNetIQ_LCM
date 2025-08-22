@@ -41,7 +41,7 @@ COPY --from=deps /app/node_modules ./node_modules
 # Copy only the packages we need for this service
 COPY packages ./packages
 COPY apps/web ./apps/web
-COPY package.json pnpm-workspace.yaml ./
+COPY package.json pnpm-workspace.yaml turbo.json ./
 
 ENV NEXT_TELEMETRY_DISABLED=1
 

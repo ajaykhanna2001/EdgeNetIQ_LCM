@@ -101,7 +101,7 @@ model License {
 
   // Relations
   contract          Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
-  assets            Asset[]  @relation(references: [id])
+  assets            Asset[]
 
   @@map("licenses")
 }
@@ -144,7 +144,7 @@ model ComplianceControl {
   updatedAt        DateTime  @updatedAt
 
   // Relations
-  assets           Asset[]   @relation(references: [id])
+  assets           Asset[]
 
   @@map("compliance_controls")
 }
@@ -172,8 +172,8 @@ model CalendarEvent {
   updatedAt      DateTime  @updatedAt
 
   // Relations
-  ships          Ship[]    @relation(references: [id])
-  assets         Asset[]   @relation(references: [id])
+  ships          Ship[]
+  assets         Asset[]
 
   @@map("calendar_events")
 }
@@ -195,7 +195,7 @@ model BlackoutWindow {
   updatedAt      DateTime @updatedAt
 
   // Relations
-  ships          Ship[]   @relation(references: [id])
+  ships          Ship[]
 
   @@map("blackout_windows")
 }

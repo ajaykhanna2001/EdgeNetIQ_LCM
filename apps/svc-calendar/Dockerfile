@@ -41,7 +41,7 @@ COPY --from=deps /app/node_modules ./node_modules
 # Copy only the packages we need for this service
 COPY packages ./packages
 COPY apps/svc-calendar ./apps/svc-calendar
-COPY package.json pnpm-workspace.yaml ./
+COPY package.json pnpm-workspace.yaml turbo.json ./
 
 # Install Prisma and generate client (with better error handling)
 RUN npm install -g pnpm@8.15.1 || echo "pnpm already installed"
