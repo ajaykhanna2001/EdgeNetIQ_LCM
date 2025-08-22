@@ -33,6 +33,10 @@ RUN pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
+
+# Skip Prisma postinstall generation to avoid DNS issues in CI
+ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
+
 COPY --from=deps /app/node_modules ./node_modules
 # Copy only the packages we need for this service
 COPY packages ./packages
