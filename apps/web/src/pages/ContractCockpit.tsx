@@ -1,4 +1,3 @@
-import React from 'react'
 import { FileText, Search, Filter, Plus, TrendingUp, DollarSign, Calendar } from 'lucide-react'
 
 export function ContractCockpit() {

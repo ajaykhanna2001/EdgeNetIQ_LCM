@@ -2,11 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CalendarService } from '../src/calendar/calendar.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { CreateCalendarEventDto } from '../src/calendar/dto/calendar-event.dto';
-import { RRule } from 'rrule';
 
 describe('CalendarService', () => {
   let service: CalendarService;
-  let prismaService: PrismaService;
+  // let _prismaService: PrismaService;
 
   const mockPrismaService = {
     calendarEvent: {
@@ -33,7 +32,7 @@ describe('CalendarService', () => {
     }).compile();
 
     service = module.get<CalendarService>(CalendarService);
-    prismaService = module.get<PrismaService>(PrismaService);
+    // _prismaService = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {

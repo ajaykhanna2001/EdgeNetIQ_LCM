@@ -1,10 +1,33 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCalendarEventDto, UpdateCalendarEventDto, ConflictCheckDto } from './dto/calendar-event.dto';
-import { CalendarEvent } from '@prisma/client';
 import { RRule } from 'rrule';
 import ical from 'ical-generator';
 import { calculateRiskScore } from '../utils/risk-calculator';
+
+// Define the type locally since Prisma client generation might fail in CI
+type CalendarEvent = {
+  id: string;
+  title: string;
+  description?: string;
+  eventType: string;
+  startDate: Date;
+  endDate: Date;
+  isAllDay: boolean;
+  recurrenceRule?: string;
+  exceptionDates: Date[];
+  location?: string;
+  organizer: string;
+  attendees: string[];
+  shipIds: string[];
+  assetIds: string[];
+  priority: string;
+  status: string;
+  riskScore?: number;
+  metadata: any;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 @Injectable()
 export class CalendarService {
@@ -162,7 +185,8 @@ export class CalendarService {
   }
 
   async remove(id: string): Promise<void> {
-    const event = await this.findOne(id);
+    // Validate that event exists
+    await this.findOne(id);
 
     await this.prisma.calendarEvent.delete({
       where: { id },
@@ -309,8 +333,8 @@ export class CalendarService {
       // Add recurrence rule if present
       if (event.recurrenceRule) {
         try {
-          const rrule = RRule.fromString(event.recurrenceRule);
-          calEvent.repeating(rrule.options);
+          // Pass the raw RRULE string to ical-generator
+          calEvent.repeating(event.recurrenceRule);
         } catch (error) {
           console.warn(`Failed to parse RRULE for event ${event.id}:`, error);
         }

@@ -1,4 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext, ConflictException } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Request } from 'express';
 
 interface CachedResponse {
@@ -46,16 +46,16 @@ export class IdempotencyMiddleware implements CanActivate {
       }
     }
 
-    // Store the original end method to intercept response
-    const originalEnd = response.end;
+    // Store the original methods to intercept response
+    // const _originalEnd = response.end;
     const originalJson = response.json;
 
-    let responseData: any;
+    // let _responseData: any;
     let statusCode: number = 200;
 
     // Intercept json method
     response.json = function(data: any) {
-      responseData = data;
+      // _responseData = data;
       statusCode = response.statusCode;
       
       // Cache the response for successful requests

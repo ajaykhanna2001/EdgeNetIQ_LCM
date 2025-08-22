@@ -1,4 +1,3 @@
-import React from 'react'
 import { Package, Search, Filter, Plus } from 'lucide-react'
 
 export function AssetDrawer() {

@@ -2,7 +2,6 @@ import React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay } from 'date-fns'
 import { Calendar as CalendarIcon, Filter, Download, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
-import { CalendarEvent } from '@edgenetiq/shared-types'
 import { calendarApi, mockShips, mockEventTypes, EventFilters } from '@/services/api'
 import { cn } from '@/lib/utils'
 

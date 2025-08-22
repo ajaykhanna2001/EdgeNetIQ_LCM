@@ -18,7 +18,7 @@ export class EdgeNetIQKafkaClient {
       clientId: config.clientId,
       brokers: config.brokers,
       ssl: config.ssl,
-      sasl: config.sasl,
+      ...(config.sasl && { sasl: config.sasl as any }),
     };
 
     this.kafka = new Kafka(kafkaConfig);

@@ -1,4 +1,3 @@
-import React from 'react'
 import { Shield, AlertTriangle, CheckCircle, Clock, Filter, Plus, TrendingDown } from 'lucide-react'
 
 export function ComplianceBoard() {
