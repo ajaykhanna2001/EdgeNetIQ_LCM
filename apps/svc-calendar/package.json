@@ -4,8 +4,9 @@
   "description": "EdgeNetIQ Calendar Service",
   "main": "dist/src/main.js",
   "scripts": {
-    "build": "tsc",
-    "dev": "nest start --watch",
+    "setup": "node scripts/setup-prisma.js",
+    "build": "npm run setup && tsc",
+    "dev": "npm run setup && nest start --watch",
     "start": "node dist/src/main.js",
     "start:debug": "nest start --debug --watch",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",

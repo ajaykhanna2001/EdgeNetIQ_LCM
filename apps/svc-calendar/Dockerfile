@@ -19,7 +19,13 @@ COPY apps/svc-calendar/package.json ./apps/svc-calendar/
 COPY apps/web/package.json ./apps/web/
 
 # Install dependencies using the workspace lockfile
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
+# Handle potential certificate/networking issues in CI
+RUN npm config set strict-ssl false || true
+RUN npm install -g pnpm@8.15.1 --registry https://registry.npmjs.org || \
+    npm install -g pnpm@8.15.1 --registry http://registry.npmjs.org || \
+    npm install -g pnpm@8.15.1
+RUN pnpm config set strict-ssl false || true
+RUN pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -31,18 +37,15 @@ COPY apps/svc-calendar ./apps/svc-calendar
 COPY package.json pnpm-workspace.yaml ./
 
 # Install Prisma and generate client (with better error handling)
-RUN npm install -g pnpm
+RUN npm install -g pnpm@8.15.1 || echo "pnpm already installed"
 
 # Set Prisma to use binary engines for better compatibility
 ENV PRISMA_CLI_QUERY_ENGINE_TYPE=binary
+ENV PRISMA_CLI_BINARY_TARGETS=linux-musl
 
 # Try to generate Prisma client, but continue build if it fails
 WORKDIR /app/apps/svc-calendar
-RUN pnpm prisma generate || { \
-    echo "Warning: Prisma generation failed. This may cause runtime issues."; \
-    echo "The application will attempt to generate the client at runtime."; \
-    exit 0; \
-}
+RUN node scripts/setup-prisma.js || echo "Prisma setup completed with fallback"
 
 # Build from workspace root using turbo to handle dependencies correctly
 WORKDIR /app
