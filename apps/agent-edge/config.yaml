@@ -1,0 +1,49 @@
+agent_id: "agent-001"
+ship_id: "ship-atlantic-star"
+server_url: "http://localhost:3001"
+api_key: "dev-api-key-123"
+flush_interval_seconds: 300  # 5 minutes
+max_batch_size: 50
+enable_mtls: false
+
+connectors:
+  - name: "snmp-inventory"
+    type: "snmp"
+    enabled: true
+    schedule: "0 */15 * * * *"  # Every 15 minutes
+    config:
+      hosts:
+        - "192.168.1.10"
+        - "192.168.1.11"
+        - "192.168.1.12"
+      community: "public"
+      version: "2c"
+      timeout: 30
+
+  - name: "system-health"
+    type: "http"
+    enabled: true
+    schedule: "0 */5 * * * *"   # Every 5 minutes
+    config:
+      urls:
+        - "http://localhost:8080/health"
+        - "http://192.168.1.100/api/status"
+      timeout: 10
+      max_body_size: 1048576  # 1MB
+
+  - name: "log-monitor"
+    type: "file"
+    enabled: true
+    schedule: "0 * * * * *"     # Every minute
+    config:
+      paths:
+        - "/var/log/ship/engine.log"
+        - "/var/log/ship/navigation.log"
+        - "/var/log/ship/communications.log"
+      max_file_size: 1048576    # 1MB
+
+# Optional mTLS configuration
+# certificates:
+#   cert_file: "/etc/ssl/certs/agent.crt"
+#   key_file: "/etc/ssl/private/agent.key"
+#   ca_file: "/etc/ssl/certs/ca.crt"
