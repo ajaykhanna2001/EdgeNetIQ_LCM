@@ -48,6 +48,9 @@ jobs:
         npm config set strict-ssl false || true
         pnpm config set strict-ssl false || true
         pnpm install || pnpm install --no-frozen-lockfile
+      env:
+        # Skip Prisma postinstall generation due to DNS restrictions in CI
+        PRISMA_SKIP_POSTINSTALL_GENERATE: "true"
 
     - name: Type check
       run: pnpm typecheck
@@ -179,6 +182,9 @@ jobs:
         npm config set strict-ssl false || true
         pnpm config set strict-ssl false || true
         pnpm install || pnpm install --no-frozen-lockfile
+      env:
+        # Skip Prisma postinstall generation due to DNS restrictions in CI
+        PRISMA_SKIP_POSTINSTALL_GENERATE: "true"
 
     - name: Start services
       run: |

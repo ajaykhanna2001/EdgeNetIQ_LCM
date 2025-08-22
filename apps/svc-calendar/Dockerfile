@@ -25,6 +25,9 @@ RUN npm install -g pnpm@8.15.1 --registry https://registry.npmjs.org || \
     npm install -g pnpm@8.15.1 --registry http://registry.npmjs.org || \
     npm install -g pnpm@8.15.1
 RUN pnpm config set strict-ssl false || true
+
+# Skip Prisma postinstall generation to avoid DNS issues in CI
+ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
 RUN pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
 
 # Rebuild the source code only when needed
