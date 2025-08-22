@@ -19,12 +19,23 @@ import { CreateCalendarEventDto, UpdateCalendarEventDto, MoveEventDto, ConflictC
 import { IdempotencyMiddleware } from '../middleware/idempotency.middleware';
 
 @ApiTags('calendar')
-@Controller('events')
+@Controller()
 @UseGuards(ThrottlerGuard)
 export class CalendarController {
   constructor(private readonly calendarService: CalendarService) {}
 
-  @Post()
+  @Get('health')
+  @ApiResponse({ status: 200, description: 'Service health check.' })
+  health() {
+    return { 
+      status: 'healthy', 
+      timestamp: new Date().toISOString(),
+      service: 'calendar-service',
+      version: '1.0.0'
+    };
+  }
+
+  @Post('events')
   @ApiResponse({ status: 201, description: 'Calendar event created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input data.' })
   @ApiResponse({ status: 409, description: 'Event conflicts detected.' })
@@ -33,7 +44,7 @@ export class CalendarController {
     return this.calendarService.createEvent(createCalendarEventDto);
   }
 
-  @Get()
+  @Get('events')
   @ApiQuery({ name: 'shipId', required: false, description: 'Filter by ship ID' })
   @ApiQuery({ name: 'eventType', required: false, description: 'Filter by event type' })
   @ApiQuery({ name: 'startDate', required: false, description: 'Filter events after this date' })
@@ -56,7 +67,7 @@ export class CalendarController {
     });
   }
 
-  @Get('feed.ics')
+  @Get('events/feed.ics')
   @ApiQuery({ name: 'shipId', required: false, description: 'Filter by ship ID' })
   @ApiQuery({ name: 'eventType', required: false, description: 'Filter by event type' })
   @ApiResponse({ status: 200, description: 'ICS calendar feed generated successfully.' })
@@ -75,14 +86,14 @@ export class CalendarController {
     res.status(HttpStatus.OK).send(icalData);
   }
 
-  @Post('conflicts')
+  @Post('events/conflicts')
   @ApiResponse({ status: 200, description: 'Conflict check completed.' })
   @ApiResponse({ status: 400, description: 'Invalid input data.' })
   async checkConflicts(@Body() conflictCheckDto: ConflictCheckDto) {
     return this.calendarService.checkConflicts(conflictCheckDto);
   }
 
-  @Get(':id')
+  @Get('events/:id')
   @ApiParam({ name: 'id', description: 'Calendar event ID' })
   @ApiResponse({ status: 200, description: 'Calendar event retrieved successfully.' })
   @ApiResponse({ status: 404, description: 'Calendar event not found.' })
@@ -90,7 +101,7 @@ export class CalendarController {
     return this.calendarService.findOne(id);
   }
 
-  @Patch(':id')
+  @Patch('events/:id')
   @ApiParam({ name: 'id', description: 'Calendar event ID' })
   @ApiResponse({ status: 200, description: 'Calendar event updated successfully.' })
   @ApiResponse({ status: 404, description: 'Calendar event not found.' })
@@ -99,7 +110,7 @@ export class CalendarController {
     return this.calendarService.update(id, updateCalendarEventDto);
   }
 
-  @Delete(':id')
+  @Delete('events/:id')
   @ApiParam({ name: 'id', description: 'Calendar event ID' })
   @ApiResponse({ status: 200, description: 'Calendar event deleted successfully.' })
   @ApiResponse({ status: 404, description: 'Calendar event not found.' })
@@ -108,7 +119,7 @@ export class CalendarController {
     return { message: 'Calendar event deleted successfully' };
   }
 
-  @Post(':id/move')
+  @Post('events/:id/move')
   @ApiParam({ name: 'id', description: 'Calendar event ID' })
   @ApiResponse({ status: 200, description: 'Calendar event moved successfully.' })
   @ApiResponse({ status: 404, description: 'Calendar event not found.' })
@@ -118,7 +129,7 @@ export class CalendarController {
     return this.calendarService.moveEvent(id, moveEventDto.newStartDate, moveEventDto.newEndDate);
   }
 
-  @Get(':id/expand')
+  @Get('events/:id/expand')
   @ApiParam({ name: 'id', description: 'Calendar event ID' })
   @ApiQuery({ name: 'startDate', required: true, description: 'Start date for expansion' })
   @ApiQuery({ name: 'endDate', required: true, description: 'End date for expansion' })
