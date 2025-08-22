@@ -33,8 +33,9 @@ COPY package.json pnpm-workspace.yaml ./
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm install -g pnpm
-WORKDIR /app/apps/web
-RUN pnpm build
+# Build from workspace root using turbo to handle dependencies correctly  
+WORKDIR /app
+RUN pnpm build --filter @edgenetiq/web
 
 # Production image, copy all the files and run the app
 FROM base AS runner

@@ -44,7 +44,9 @@ RUN pnpm prisma generate || { \
     exit 0; \
 }
 
-RUN pnpm build
+# Build from workspace root using turbo to handle dependencies correctly
+WORKDIR /app
+RUN pnpm build --filter @edgenetiq/svc-calendar
 
 # Production image, copy all the files and run the app
 FROM base AS runner
