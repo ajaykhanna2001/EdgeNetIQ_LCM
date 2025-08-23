@@ -37,15 +37,32 @@ WORKDIR /app
 # Skip Prisma postinstall generation to avoid DNS issues in CI
 ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
 
+# Handle SSL certificate issues in CI environments
+RUN npm config set strict-ssl false || true
+
+# Install pnpm first to ensure it's available for workspace commands
+RUN npm install -g pnpm@8.15.1 --registry https://registry.npmjs.org || \
+    npm install -g pnpm@8.15.1 --registry http://registry.npmjs.org || \
+    npm install -g pnpm@8.15.1
+
+RUN pnpm config set strict-ssl false || true
+
+# Copy everything from deps stage including proper workspace structure
 COPY --from=deps /app/node_modules ./node_modules
-# Copy only the packages we need for this service
+COPY --from=deps /app/package.json ./package.json
+COPY --from=deps /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=deps /app/pnpm-lock.yaml ./pnpm-lock.yaml
+
+# Copy source code for all packages and the specific app
 COPY packages ./packages
 COPY apps/web ./apps/web
-COPY package.json pnpm-workspace.yaml turbo.json ./
+COPY turbo.json ./
+
+# Ensure pnpm can find workspace configuration and rebuild workspace dependencies
+RUN pnpm install --offline --frozen-lockfile
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN npm install -g pnpm@8.15.1 || echo "pnpm already installed"
 # Build from workspace root using turbo to handle dependencies correctly  
 WORKDIR /app
 RUN pnpm build --filter @edgenetiq/web
