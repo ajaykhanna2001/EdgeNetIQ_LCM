@@ -206,9 +206,11 @@ jobs:
 
     - name: Start calendar service
       run: |
-        cd apps/svc-calendar
-        npm run build
+        # Build using turbo from workspace root to handle dependencies correctly
+        pnpm build --filter @edgenetiq/svc-calendar
+        
         # Start service with timeout and better error handling
+        cd apps/svc-calendar
         timeout 30s npm start &
         SERVICE_PID=$!
         
