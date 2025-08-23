@@ -1,0 +1,22 @@
+{
+  "name": "@edgenetiq/shared-kafka",
+  "version": "1.0.0",
+  "description": "Shared Kafka utilities for EdgeNetIQ platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.11.19"
+  },
+  "dependencies": {
+    "@edgenetiq/shared-types": "workspace:*",
+    "@edgenetiq/shared-avro": "workspace:*",
+    "kafkajs": "^2.2.4"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "@edgenetiq/shared-rbac",
+  "version": "1.0.0",
+  "description": "Shared RBAC utilities for EdgeNetIQ platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@edgenetiq/shared-types": "workspace:*",
+    "@casl/ability": "^6.7.1"
+  }
+}

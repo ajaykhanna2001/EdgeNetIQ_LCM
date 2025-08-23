@@ -1,0 +1,21 @@
+{
+  "name": "@edgenetiq/shared-config",
+  "version": "1.0.0",
+  "description": "Shared configuration utilities for EdgeNetIQ platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.11.19"
+  },
+  "dependencies": {
+    "@edgenetiq/shared-types": "workspace:*",
+    "joi": "^17.12.1"
+  }
+}

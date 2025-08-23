@@ -1,0 +1,216 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Ship {
+  id               String  @id @default(cuid())
+  name             String
+  type             String
+  imo              String?
+  callSign         String?
+  flag             String?
+  owner            String?
+  operationalStatus String @default("active")
+  location         Json?
+  contactInfo      Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  assets           Asset[]
+  calendarEvents   CalendarEvent[]
+  blackoutWindows  BlackoutWindow[]
+
+  @@map("ships")
+}
+
+model Asset {
+  id           String   @id @default(cuid())
+  name         String
+  type         String
+  shipId       String
+  status       String   @default("active")
+  criticality  String   @default("medium")
+  manufacturer String?
+  model        String?
+  serialNumber String?
+  ipAddress    String?
+  location     String?
+  tags         String[]
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  ship             Ship @relation(fields: [shipId], references: [id], onDelete: Cascade)
+  lifecycleEvents  LifecycleEvent[]
+  calendarEvents   CalendarEvent[]
+  complianceControls ComplianceControl[]
+  licenses         License[]
+
+  @@map("assets")
+}
+
+model Contract {
+  id            String   @id @default(cuid())
+  name          String
+  vendor        String
+  type          String
+  status        String   @default("active")
+  startDate     DateTime
+  endDate       DateTime
+  value         Float
+  currency      String   @default("USD")
+  renewalTerms  String?
+  contactPerson String?
+  contactEmail  String?
+  terms         String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  licenses      License[]
+
+  @@map("contracts")
+}
+
+model License {
+  id                String   @id @default(cuid())
+  contractId        String
+  name              String
+  type              String
+  totalLicenses     Int
+  usedLicenses      Int      @default(0)
+  availableLicenses Int
+  cost              Float
+  costModel         String
+  expiryDate        DateTime?
+  autoRenewal       Boolean  @default(false)
+  assetIds          String[]
+  metadata          Json     @default("{}")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  contract          Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  assets            Asset[]
+
+  @@map("licenses")
+}
+
+model LifecycleEvent {
+  id                String    @id @default(cuid())
+  assetId           String
+  eventType         String
+  scheduledDate     DateTime
+  actualDate        DateTime?
+  status            String    @default("scheduled")
+  description       String
+  riskLevel         String    @default("medium")
+  impactAssessment  String?
+  remediationPlan   String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  asset             Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@map("lifecycle_events")
+}
+
+model ComplianceControl {
+  id               String    @id @default(cuid())
+  name             String
+  framework        String
+  category         String
+  description      String
+  severity         String    @default("medium")
+  status           String    @default("pending")
+  evidenceRequired String[]
+  lastAssessment   DateTime?
+  nextAssessment   DateTime
+  assignedTo       String?
+  assetIds         String[]
+  metadata         Json      @default("{}")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  // Relations
+  assets           Asset[]
+
+  @@map("compliance_controls")
+}
+
+model CalendarEvent {
+  id             String    @id @default(cuid())
+  title          String
+  description    String?
+  eventType      String
+  startDate      DateTime
+  endDate        DateTime
+  isAllDay       Boolean   @default(false)
+  recurrenceRule String?
+  exceptionDates DateTime[]
+  location       String?
+  organizer      String
+  attendees      String[]
+  shipIds        String[]
+  assetIds       String[]
+  priority       String    @default("medium")
+  status         String    @default("scheduled")
+  riskScore      Float?
+  metadata       Json      @default("{}")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relations
+  ships          Ship[]
+  assets         Asset[]
+
+  @@map("calendar_events")
+}
+
+model BlackoutWindow {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  startDate      DateTime
+  endDate        DateTime
+  recurrenceRule String?
+  shipIds        String[]
+  assetIds       String[]
+  eventTypes     String[]
+  severity       String   @default("warning")
+  reason         String
+  createdBy      String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  ships          Ship[]
+
+  @@map("blackout_windows")
+}
+
+model WebhookSubscription {
+  id           String   @id @default(cuid())
+  name         String
+  url          String
+  events       String[]
+  secret       String?
+  isActive     Boolean  @default(true)
+  headers      Json     @default("{}")
+  retryPolicy  Json     @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("webhook_subscriptions")
+}

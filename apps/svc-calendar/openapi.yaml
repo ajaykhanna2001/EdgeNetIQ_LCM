@@ -1,0 +1,709 @@
+openapi: 3.0.0
+info:
+  title: EdgeNetIQ Calendar Service API
+  description: Calendar and event management service for EdgeNetIQ platform
+  version: 1.0.0
+  contact:
+    name: EdgeNetIQ Platform Team
+    email: platform@edgenetiq.com
+servers:
+  - url: http://localhost:3001
+    description: Development server
+  - url: https://api.edgenetiq.com/calendar
+    description: Production server
+
+tags:
+  - name: calendar
+    description: Calendar event operations
+  - name: events
+    description: Event management operations
+
+paths:
+  /events:
+    get:
+      tags:
+        - events
+      summary: Get calendar events
+      description: Retrieve calendar events with optional filtering
+      parameters:
+        - name: shipId
+          in: query
+          description: Filter by ship ID
+          required: false
+          schema:
+            type: string
+        - name: eventType
+          in: query
+          description: Filter by event type
+          required: false
+          schema:
+            type: string
+            enum: [maintenance, upgrade, audit, training, incident, meeting]
+        - name: startDate
+          in: query
+          description: Filter events after this date
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: Filter events before this date
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: status
+          in: query
+          description: Filter by event status
+          required: false
+          schema:
+            type: string
+            enum: [scheduled, confirmed, cancelled, completed]
+      responses:
+        '200':
+          description: Calendar events retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalendarEvent'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - events
+      summary: Create calendar event
+      description: Create a new calendar event
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          description: Idempotency key for safe retries
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCalendarEventDto'
+      responses:
+        '201':
+          description: Calendar event created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEvent'
+        '400':
+          description: Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Event conflicts detected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictError'
+
+  /events/feed.ics:
+    get:
+      tags:
+        - calendar
+      summary: Get ICS calendar feed
+      description: Generate and download ICS calendar feed
+      parameters:
+        - name: shipId
+          in: query
+          description: Filter by ship ID
+          required: false
+          schema:
+            type: string
+        - name: eventType
+          in: query
+          description: Filter by event type
+          required: false
+          schema:
+            type: string
+            enum: [maintenance, upgrade, audit, training, incident, meeting]
+      responses:
+        '200':
+          description: ICS calendar feed generated successfully
+          content:
+            text/calendar:
+              schema:
+                type: string
+                example: |
+                  BEGIN:VCALENDAR
+                  VERSION:2.0
+                  PRODID:-//EdgeNetIQ//Calendar//EN
+                  BEGIN:VEVENT
+                  UID:event-123@edgenetiq.com
+                  DTSTART:20240115T100000Z
+                  DTEND:20240115T120000Z
+                  SUMMARY:Engine Maintenance
+                  DESCRIPTION:Routine engine maintenance check
+                  LOCATION:Engine Room
+                  END:VEVENT
+                  END:VCALENDAR
+
+  /events/conflicts:
+    post:
+      tags:
+        - events
+      summary: Check for conflicts
+      description: Check for event conflicts and blackout windows
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConflictCheckDto'
+      responses:
+        '200':
+          description: Conflict check completed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalendarEvent'
+        '400':
+          description: Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /events/{id}:
+    get:
+      tags:
+        - events
+      summary: Get calendar event by ID
+      description: Retrieve a specific calendar event
+      parameters:
+        - name: id
+          in: path
+          description: Calendar event ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Calendar event retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEvent'
+        '404':
+          description: Calendar event not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      tags:
+        - events
+      summary: Update calendar event
+      description: Update an existing calendar event
+      parameters:
+        - name: id
+          in: path
+          description: Calendar event ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCalendarEventDto'
+      responses:
+        '200':
+          description: Calendar event updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEvent'
+        '400':
+          description: Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Calendar event not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - events
+      summary: Delete calendar event
+      description: Delete a calendar event
+      parameters:
+        - name: id
+          in: path
+          description: Calendar event ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Calendar event deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Calendar event deleted successfully
+        '404':
+          description: Calendar event not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /events/{id}/move:
+    post:
+      tags:
+        - events
+      summary: Move calendar event
+      description: Move a calendar event to a new time slot
+      parameters:
+        - name: id
+          in: path
+          description: Calendar event ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoveEventDto'
+      responses:
+        '200':
+          description: Calendar event moved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEvent'
+        '400':
+          description: Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Calendar event not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Event conflicts detected at new time
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictError'
+
+  /events/{id}/expand:
+    get:
+      tags:
+        - events
+      summary: Expand recurring event
+      description: Get all instances of a recurring event within a date range
+      parameters:
+        - name: id
+          in: path
+          description: Calendar event ID
+          required: true
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          description: Start date for expansion
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: End date for expansion
+          required: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Recurring event instances expanded successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventInstance'
+        '404':
+          description: Calendar event not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    CalendarEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          example: cluv1234567890
+        title:
+          type: string
+          example: Engine Maintenance
+        description:
+          type: string
+          nullable: true
+          example: Routine engine maintenance check
+        eventType:
+          type: string
+          enum: [maintenance, upgrade, audit, training, incident, meeting]
+          example: maintenance
+        startDate:
+          type: string
+          format: date-time
+          example: '2024-01-15T10:00:00Z'
+        endDate:
+          type: string
+          format: date-time
+          example: '2024-01-15T12:00:00Z'
+        isAllDay:
+          type: boolean
+          example: false
+        recurrenceRule:
+          type: string
+          nullable: true
+          example: 'FREQ=WEEKLY;BYDAY=MO'
+        exceptionDates:
+          type: array
+          items:
+            type: string
+            format: date-time
+          example: ['2024-01-22T10:00:00Z']
+        location:
+          type: string
+          nullable: true
+          example: Engine Room
+        organizer:
+          type: string
+          example: maintenance@ship.com
+        attendees:
+          type: array
+          items:
+            type: string
+          example: ['engineer@ship.com', 'captain@ship.com']
+        shipIds:
+          type: array
+          items:
+            type: string
+          example: ['ship-123']
+        assetIds:
+          type: array
+          items:
+            type: string
+          example: ['engine-456', 'pump-789']
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+          example: high
+        status:
+          type: string
+          enum: [scheduled, confirmed, cancelled, completed]
+          example: confirmed
+        riskScore:
+          type: number
+          nullable: true
+          minimum: 0
+          maximum: 1
+          example: 0.7
+        metadata:
+          type: object
+          additionalProperties: true
+          example: { department: maintenance, category: routine }
+        createdAt:
+          type: string
+          format: date-time
+          example: '2024-01-10T08:00:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2024-01-10T08:00:00Z'
+
+    CreateCalendarEventDto:
+      type: object
+      required:
+        - title
+        - eventType
+        - startDate
+        - endDate
+        - isAllDay
+        - organizer
+        - attendees
+        - shipIds
+        - assetIds
+        - priority
+        - status
+      properties:
+        title:
+          type: string
+          example: Engine Maintenance
+        description:
+          type: string
+          example: Routine engine maintenance check
+        eventType:
+          type: string
+          enum: [maintenance, upgrade, audit, training, incident, meeting]
+          example: maintenance
+        startDate:
+          type: string
+          format: date-time
+          example: '2024-01-15T10:00:00Z'
+        endDate:
+          type: string
+          format: date-time
+          example: '2024-01-15T12:00:00Z'
+        isAllDay:
+          type: boolean
+          default: false
+          example: false
+        recurrenceRule:
+          type: string
+          example: 'FREQ=WEEKLY;BYDAY=MO'
+        exceptionDates:
+          type: array
+          items:
+            type: string
+            format: date-time
+          example: ['2024-01-22T10:00:00Z']
+        location:
+          type: string
+          example: Engine Room
+        organizer:
+          type: string
+          example: maintenance@ship.com
+        attendees:
+          type: array
+          items:
+            type: string
+          example: ['engineer@ship.com']
+        shipIds:
+          type: array
+          items:
+            type: string
+          example: ['ship-123']
+        assetIds:
+          type: array
+          items:
+            type: string
+          example: ['engine-456']
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+          default: medium
+          example: high
+        status:
+          type: string
+          enum: [scheduled, confirmed, cancelled, completed]
+          default: scheduled
+          example: scheduled
+        riskScore:
+          type: number
+          minimum: 0
+          maximum: 1
+          example: 0.7
+        metadata:
+          type: object
+          additionalProperties: true
+
+    UpdateCalendarEventDto:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        eventType:
+          type: string
+          enum: [maintenance, upgrade, audit, training, incident, meeting]
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        isAllDay:
+          type: boolean
+        recurrenceRule:
+          type: string
+        exceptionDates:
+          type: array
+          items:
+            type: string
+            format: date-time
+        location:
+          type: string
+        organizer:
+          type: string
+        attendees:
+          type: array
+          items:
+            type: string
+        shipIds:
+          type: array
+          items:
+            type: string
+        assetIds:
+          type: array
+          items:
+            type: string
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        status:
+          type: string
+          enum: [scheduled, confirmed, cancelled, completed]
+        riskScore:
+          type: number
+          minimum: 0
+          maximum: 1
+        metadata:
+          type: object
+          additionalProperties: true
+
+    MoveEventDto:
+      type: object
+      required:
+        - newStartDate
+        - newEndDate
+      properties:
+        newStartDate:
+          type: string
+          format: date-time
+          example: '2024-01-16T10:00:00Z'
+        newEndDate:
+          type: string
+          format: date-time
+          example: '2024-01-16T12:00:00Z'
+
+    ConflictCheckDto:
+      type: object
+      required:
+        - startDate
+        - endDate
+        - shipIds
+        - assetIds
+      properties:
+        startDate:
+          type: string
+          format: date-time
+          example: '2024-01-15T10:00:00Z'
+        endDate:
+          type: string
+          format: date-time
+          example: '2024-01-15T12:00:00Z'
+        shipIds:
+          type: array
+          items:
+            type: string
+          example: ['ship-123']
+        assetIds:
+          type: array
+          items:
+            type: string
+          example: ['engine-456']
+        excludeEventId:
+          type: string
+          example: event-to-exclude
+
+    EventInstance:
+      type: object
+      properties:
+        start:
+          type: string
+          format: date-time
+          example: '2024-01-15T10:00:00Z'
+        end:
+          type: string
+          format: date-time
+          example: '2024-01-15T12:00:00Z'
+        originalStart:
+          type: string
+          format: date-time
+          example: '2024-01-15T10:00:00Z'
+        originalEnd:
+          type: string
+          format: date-time
+          example: '2024-01-15T12:00:00Z'
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Bad Request
+        message:
+          type: string
+          example: Invalid input data
+        statusCode:
+          type: integer
+          example: 400
+        timestamp:
+          type: string
+          format: date-time
+          example: '2024-01-15T10:00:00Z'
+
+    ConflictError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Conflict
+        message:
+          type: string
+          example: Event conflicts detected
+        conflicts:
+          type: array
+          items:
+            $ref: '#/components/schemas/CalendarEvent'
+        statusCode:
+          type: integer
+          example: 409
+        timestamp:
+          type: string
+          format: date-time
+          example: '2024-01-15T10:00:00Z'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
