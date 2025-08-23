@@ -188,7 +188,7 @@ jobs:
 
     - name: Start services
       run: |
-        docker-compose -f docker-compose.dev.yml up -d postgres redpanda redis
+        docker compose -f docker-compose.dev.yml up -d postgres redpanda redis
         sleep 30
 
     - name: Run migrations and seed
@@ -277,7 +277,7 @@ jobs:
 
     - name: Cleanup
       if: always()
-      run: docker-compose -f docker-compose.dev.yml down -v
+      run: docker compose -f docker-compose.dev.yml down -v
 
   security-scan:
     name: Security Scan
